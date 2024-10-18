@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iFlytek বাংলা অনুবাদক</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+        input, select, button, textarea {
+            margin: 10px;
+            padding: 10px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>iFlytek বাংলা অনুবাদক</h1>
+    <p>তোমার টেক্সট লিখো এবং ভাষা নির্বাচন করো।</p>
+    
+    <textarea id="text" rows="4" placeholder="এখানে তোমার টেক্সট লিখুন..."></textarea>
+    
+    <br>
+    
+    <select id="language">
+        <option value="en">ইংরেজি</option>
+        <option value="bn">বাংলা</option>
+        <!-- এখানে অন্যান্য ভাষা যুক্ত করতে পারেন -->
+    </select>
+    
+    <br>
+    
+    <button id="translateBtn">অনুবাদ করুন</button>
+
+    <div id="result"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        const appId = 'ga4ea3fc'; // আপনার APP ID
+        const apiKey = 'c60eb20483eb3bfe336c3555a17fb892'; // আপনার API Key
+        const apiSecret = '2ce4d75776d465bd9ae4da4b36ca94da'; // আপনার API Secret
+        const apiUrl = 'https://openapi.xfyun.cn/v2/aiui'; // API URL
+
+        document.getElementById('translateBtn').onclick = async function() {
+            const text = document.getElementById('text').value;
+            const targetLanguage = document.getElementById('language').value;
+
+            const currentTime = Math.floor(Date.now() / 1000);
+            const param = btoa(JSON.stringify({ engine_type: 'intelligent', text: text, lang: targetLanguage, appid: appId }));
+            const checkSum = CryptoJS.MD5(apiKey + currentTime + apiSecret).toString();
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Appid': appId,
+                        'X-CurTime': currentTime,
+                        'X-Param': param,
+                        'X-CheckSum': checkSum
+                    },
+                    body: JSON.stringify({ text: text, lang: targetLanguage })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('result').innerText = 'ত্রুটি: ' + data.error.message;
+                } else {
+                    document.getElementById('result').innerText = 'অনুবাদ: ' + data.data.translations[0].translatedText;
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = 'ত্রুটি: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
